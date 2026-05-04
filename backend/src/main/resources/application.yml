@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: inkwise
+
+  data:
+    mongodb:
+      auto-index-creation: true
+  mongodb:
+    uri: mongodb://localhost:27017/inkwise
+server:
+  port: 8080
+
+logging:
+  level:
+    "[org.springframework.security]": INFO
+
+jwt:
+  secret: your-very-long-secret-key-at-least-32-chars!!
+  access-token-expiry-ms: 3600000
+  refresh-token-expiry-ms: 604800000
