@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.myinvo.inkwise.dto.LoginRequest;
 import com.myinvo.inkwise.dto.LoginResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 
@@ -41,6 +43,14 @@ public ResponseEntity<LoginResponse> login(
 
     LoginResponse loginResponse = authService.login(request, response);
     return ResponseEntity.ok(loginResponse);
+}
+
+@PostMapping("/refresh")
+public ResponseEntity<Void> refresh(
+        HttpServletRequest request,
+        HttpServletResponse response) {
+    authService.refreshToken(request, response);
+    return ResponseEntity.noContent().build(); // 204
 }
 
 @PostMapping("/logout")

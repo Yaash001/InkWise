@@ -1,19 +1,30 @@
 package com.myinvo.inkwise.config;
 
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+
 import org.springframework.security.config.http.SessionCreationPolicy;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final JwtAuthFilter jwtAuthFilter;
+
     /**
-     * BCrypt password encoder bean (strength: 10)
+     * BCrypt password encoder bean
      */
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -21,21 +32,42 @@ public class SecurityConfig {
     }
 
     /**
-     * Security filter chain - Disable default Spring Security for now
-     * We'll enable JWT later
+     * Security configuration
      */
-@Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .csrf(csrf -> csrf.disable())
-        .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS) 
-        )
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/auth/signup", "/auth/login","/auth/logout").permitAll()
-            .anyRequest().authenticated()
-        );
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-    return http.build();
-}
+        http
+
+            // Disable CSRF for REST APIs
+            .csrf(csrf -> csrf.disable())
+
+            // No sessions - JWT based auth
+            .sessionManagement(session ->
+                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+
+            // Route authorization
+            .authorizeHttpRequests(auth -> auth
+
+                    // Public endpoints
+                    .requestMatchers(
+                            "/auth/signup",
+                            "/auth/login",
+                            "/auth/logout",
+                            "/auth/refresh"
+                    ).permitAll()
+
+                    // All other endpoints require authentication
+                    .anyRequest().authenticated()
+            )
+
+            // Add JWT filter before Spring auth filter
+            .addFilterBefore(
+                    jwtAuthFilter,
+                    UsernamePasswordAuthenticationFilter.class
+            );
+
+        return http.build();
+    }
 }
